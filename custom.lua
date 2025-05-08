@@ -16,6 +16,11 @@ local nomesbloqueados = {
 }
 local comprarespadas = true
 local gravestone = true
+local IDs = {
+    7449423635, -- Sea 3
+    2753915549, -- Sea 1
+    4442272183, -- Sea 2
+}
 
 -- Verificação de nome bloqueado
 local function estaBloqueado(nome)
@@ -34,14 +39,17 @@ local function esperarCarregamento()
     end
 end
 
+-- Pray Event
 local function gravestoneEvent()
-    if gravestone then
-        wait(1)
-            local args = {
-            "gravestoneEvent",
-            2
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
+    if game.PlaceId == 7449423635 then
+        while gravestone do
+            wait(1)
+                local args = {
+                "gravestoneEvent",
+                2
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
+        end
     end
 end
 
@@ -68,6 +76,7 @@ local function buySwords()
             for _, arma in ipairs(armas) do
                 comprarItem("BuyItem", arma)
             end
+            task.wait(0.5)
         end
     end)
 end
@@ -110,7 +119,7 @@ local function aceitarPedidosAmizade()
     end
 end
 
--- Roda tudo
+-- Inicialização
 local function rodarScript()
     gravestoneEvent()
     buySwords()
@@ -126,7 +135,24 @@ local function rodarScript()
     end
 end
 
+-- Checar o ID do jogo para inicialização.
+local function checkGameID()
+    local gameID = game.PlaceId
+    local jogo = false
+    for _, id in ipairs(IDs) do
+        if gameID == id then
+            jogo = true
+            break
+        end
+    end
+        if jogo then
+            print("Iniciando script...")
+            rodarScript()
+        else
+            game.Players.LocalPlayer:Kick("Jogo não suportado.")
+    end
+end
+
 -- Iniciar
-print("Iniciando script...")
 esperarCarregamento()
-rodarScript()
+checkGameID()
