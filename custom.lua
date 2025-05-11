@@ -1,73 +1,56 @@
--- Configurações
-local tempoEntreMensagens = {3, 10}
-local tempoEntreAcoes = {15, 30}
-local mensagens = {
-    "Contas de Blox Fruits? Apenas com o SirMadri!",
-    "As melhores contas na GGMAX!",
-    "gg/bloxemporium",
-    "Garanta suas novas frutas na gg/bloxemporium!",
-    "gg/bloxemporium"
-}
-local nomesbloqueados = {
-    "BloxEmporium",
-    "SirMadriGGMAX",
-    "RoyaleAccounts",
-    "PlaceBloxx",
-}
-local comprarespadas = true
-local gravestone = true
 local IDs = {
     7449423635, -- Sea 3
     2753915549, -- Sea 1
     4442272183, -- Sea 2
 }
 
--- Verificação de nome bloqueado
+local config = getgenv().Config or {}
+
+local tempoEntreMensagens = config.TempoEntreMensagens or {3, 10}
+local tempoEntreAcoes = config.TempoEntreAcoes or {15, 30}
+local mensagens = config.mensagens or {}
+local nomesbloqueados = config.nomesbloqueados or {}
+local comprarespadas = config.ComprarEspadas or false
+local gravestone = config.Gravestone or false
+local fps = config.Fps or false
+
+local function setfps()
+    if fps then
+        setfpscap(fps)
+    end
+end
+
 local function estaBloqueado(nome)
     for _, bloqueado in ipairs(nomesbloqueados) do
-        if nome == bloqueado then
-            return true
-        end
+        if nome == bloqueado then return true end
     end
     return false
 end
 
--- Espera até o jogo e o jogador estarem carregados
 local function esperarCarregamento()
     while not game:IsLoaded() or not game.Players.LocalPlayer do
         task.wait(1)
     end
 end
 
--- Pray Event
 local function gravestoneEvent()
-    if game.PlaceId == 7449423635 then
-        while gravestone do
-            wait(1)
-                local args = {
-                "gravestoneEvent",
-                2
-            }
-            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
-        end
+    while gravestone do
+        task.wait(1)
+        local args = {"gravestoneEvent", 2}
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
     end
 end
 
--- Compra de itens com delay
 local function comprarItem(categoria, nome)
-    local args = {
-        [1] = categoria,
-        [2] = nome
-    }
+    local args = {[1] = categoria, [2] = nome}
     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
     task.wait(0.2)
 end
 
--- Compra automática de espadas
 local function buySwords()
-    if not comprarespadas then return end
     task.spawn(function()
         while true do
+            if not comprarespadas then break end
             comprarItem("LegendarySwordDealer", "2")
             local armas = {
                 "Katana", "Cutlass", "Dual Katana", "Iron Mace",
@@ -81,12 +64,10 @@ local function buySwords()
     end)
 end
 
--- Escolhe intervalo aleatório entre dois valores
 local function intervaloAleatorio(intervalo)
     return math.random(intervalo[1], intervalo[2])
 end
 
--- Envia mensagem no chat
 local ultimaMensagem = ""
 local function enviarMensagem()
     if #mensagens == 0 then return end
@@ -98,7 +79,6 @@ local function enviarMensagem()
     game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(mensagem, "All")
 end
 
--- Envia pedido de amizade
 local function enviarPedidoAmizade(jogador)
     if jogador and jogador ~= game.Players.LocalPlayer
     and not game.Players.LocalPlayer:IsFriendsWith(jogador.UserId)
@@ -107,7 +87,6 @@ local function enviarPedidoAmizade(jogador)
     end
 end
 
--- Aceita automaticamente amizades
 local function aceitarPedidosAmizade()
     while task.wait(5) do
         for _, jogador in ipairs(game.Players:GetPlayers()) do
@@ -119,10 +98,23 @@ local function aceitarPedidosAmizade()
     end
 end
 
--- Inicialização
+local function jogoSuportado()
+    local id = game.PlaceId
+    for _, permitido in ipairs(IDs) do
+        if id == permitido then return true end
+    end
+    return false
+end
+
 local function rodarScript()
-    gravestoneEvent()
-    buySwords()
+    local id = game.PlaceId
+    -- Sea 3: gravestone + restante
+    if id == 7449423635 and gravestone then
+        task.spawn(gravestoneEvent)
+    end
+    if comprarespadas then
+        task.spawn(buySwords)
+    end
     task.spawn(aceitarPedidosAmizade)
     while task.wait(intervaloAleatorio(tempoEntreMensagens)) do
         enviarMensagem()
@@ -135,24 +127,12 @@ local function rodarScript()
     end
 end
 
--- Checar o ID do jogo para inicialização.
-local function checkGameID()
-    local gameID = game.PlaceId
-    local jogo = false
-    for _, id in ipairs(IDs) do
-        if gameID == id then
-            jogo = true
-            break
-        end
-    end
-        if jogo then
-            print("Iniciando script...")
-            rodarScript()
-        else
-            game.Players.LocalPlayer:Kick("Jogo não suportado.")
-    end
-end
-
--- Iniciar
+-- Execução
 esperarCarregamento()
-checkGameID()
+    setfps()
+if jogoSuportado() then
+    print("Iniciando script...")
+    rodarScript()
+else
+    game.Players.LocalPlayer:Kick("Jogo não suportado.")
+end
