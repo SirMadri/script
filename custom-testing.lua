@@ -30,12 +30,10 @@ local function esperarCarregamento()
 end
 
 local function gravestoneEvent()
-    if game.PlaceId == 7449423635 then
-        while gravestone do
-            task.wait(1)
-            local args = {"gravestoneEvent", 2}
-            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
-        end
+    while gravestone do
+        task.wait(1)
+        local args = {"gravestoneEvent", 2}
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
     end
 end
 
@@ -46,9 +44,9 @@ local function comprarItem(categoria, nome)
 end
 
 local function buySwords()
-    if not comprarespadas then return end
     task.spawn(function()
         while true do
+            if not comprarespadas then break end
             comprarItem("LegendarySwordDealer", "2")
             local armas = {
                 "Katana", "Cutlass", "Dual Katana", "Iron Mace",
@@ -96,35 +94,43 @@ local function aceitarPedidosAmizade()
     end
 end
 
-local function jogo()
-    local gameID = game.PlaceId
-    for _, id in ipairs(IDs) do
-        if gameID == id then return true end
+local function jogoSuportado()
+    local id = game.PlaceId
+    for _, permitido in ipairs(IDs) do
+        if id == permitido then return true end
     end
     return false
 end
 
 local function rodarScript()
-    if jogo() then
-        gravestoneEvent()
-        buySwords()
-    else 
-        print("Blox Fruits não detectado, expulsando jogador...")
-        task.spawn(aceitarPedidosAmizade)
-        while task.wait(intervaloAleatorio(tempoEntreMensagens)) do
-            enviarMensagem()
-            task.wait(intervaloAleatorio(tempoEntreAcoes))
-            local jogadores = game.Players:GetPlayers()
-            if #jogadores > 1 then
-                local escolhido = jogadores[math.random(#jogadores)]
-                enviarPedidoAmizade(escolhido)
-            end
+    local id = game.PlaceId
+
+    -- Sea 3: gravestone + restante
+    if id == 7449423635 and gravestone then
+        task.spawn(gravestoneEvent)
+    end
+
+    -- Todos os mares: espadas, mensagens, amizade
+    if comprarespadas then
+        task.spawn(buySwords)
+    end
+
+    task.spawn(aceitarPedidosAmizade)
+
+    while task.wait(intervaloAleatorio(tempoEntreMensagens)) do
+        enviarMensagem()
+        task.wait(intervaloAleatorio(tempoEntreAcoes))
+        local jogadores = game.Players:GetPlayers()
+        if #jogadores > 1 then
+            local escolhido = jogadores[math.random(#jogadores)]
+            enviarPedidoAmizade(escolhido)
         end
     end
 end
 
+-- Execução
 esperarCarregamento()
-if jogo() then
+if jogoSuportado() then
     print("Iniciando script...")
     rodarScript()
 else
