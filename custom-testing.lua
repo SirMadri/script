@@ -1,11 +1,9 @@
--- IDs dos jogos (fixos)
 local IDs = {
     7449423635, -- Sea 3
     2753915549, -- Sea 1
     4442272183, -- Sea 2
 }
 
--- Configurações do usuário
 local config = getgenv().Config or {}
 
 local tempoEntreMensagens = config.TempoEntreMensagens or {3, 10}
@@ -14,8 +12,14 @@ local mensagens = config.mensagens or {}
 local nomesbloqueados = config.nomesbloqueados or {}
 local comprarespadas = config.ComprarEspadas or false
 local gravestone = config.Gravestone or false
+local fps = config.Fps or false
 
--- Funções auxiliares
+local function setfps()
+    if fps then
+        setfpscap(fps)
+    end
+end
+
 local function estaBloqueado(nome)
     for _, bloqueado in ipairs(nomesbloqueados) do
         if nome == bloqueado then return true end
@@ -104,19 +108,14 @@ end
 
 local function rodarScript()
     local id = game.PlaceId
-
     -- Sea 3: gravestone + restante
     if id == 7449423635 and gravestone then
         task.spawn(gravestoneEvent)
     end
-
-    -- Todos os mares: espadas, mensagens, amizade
     if comprarespadas then
         task.spawn(buySwords)
     end
-
     task.spawn(aceitarPedidosAmizade)
-
     while task.wait(intervaloAleatorio(tempoEntreMensagens)) do
         enviarMensagem()
         task.wait(intervaloAleatorio(tempoEntreAcoes))
@@ -130,6 +129,7 @@ end
 
 -- Execução
 esperarCarregamento()
+    setfps()
 if jogoSuportado() then
     print("Iniciando script...")
     rodarScript()
