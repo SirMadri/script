@@ -34,13 +34,39 @@ local function moveTo(targetCFrame, speed)
     rootPart.CanCollide = originalCanCollide
 end
 
+--==================================== Buscar NPC mais próximo ====================================--
+local function getClosestNPC()
+    local closestNPC = nil
+    local closestDistance = math.huge
+    for _, npc in pairs(game:GetService("ReplicatedStorage"):WaitForChild("NPCs"):GetChildren()) do
+        if npc.Name == "Boat Dealer" or npc.Name == "Luxury Boat Dealer" then
+            local distance = (npc.PrimaryPart.Position - character.HumanoidRootPart.Position).Magnitude
+            if distance < closestDistance then
+                closestDistance = distance
+                closestNPC = npc
+            end
+        end
+    end
+    for _, npc in pairs(game:GetService("Workspace"):WaitForChild("NPCs"):GetChildren()) do
+        if npc.Name == "Boat Dealer" or npc.Name == "Luxury Boat Dealer" then
+            local distance = (npc.PrimaryPart.Position - character.HumanoidRootPart.Position).Magnitude
+            if distance < closestDistance then
+                closestDistance = distance
+                closestNPC = npc
+            end
+        end
+    end
+
+    return closestNPC
+end
+
 --==================================== Resetar Stats ====================================--
 local function resetstats()
     if not spendfragments then return end
     for _ = 1, 15 do
         task.spawn(function()
             while fragValue and fragValue.Value >= 3000 do
-                wait(0.01)
+                wait(0.05)
                 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward", "Refund", "2")
             end
         end)
@@ -63,17 +89,11 @@ end
 --==================================== Spend Bellys ====================================--
 local function spendmoney()
     if not spendbellis then return end
-    for _ = 1, 1 do
+    for _ = 1, 15 do
         task.spawn(function()
             while beliValue and beliValue.Value >= 5000 do
                 task.wait(0.01)
-                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyBoat","PirateGrandBrigade")
-                task.wait(0.01)
-                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyBoat","PirateSloop")
-                task.wait(0.01)
-                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyBoat","Guardian")
-                task.wait(0.01)
-                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyBoat","PirateBrigade")
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyBoat", "Guardian")
             end
         end)
     end
@@ -85,7 +105,7 @@ local function advertise()
     if divul then
         while true do     
             wait(0.01)
-            game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("BLOXFRUIS BLACKMARKET COME TO BUY CHEAP ACCOUNTS AT VNROBLOX.COM, I AM THE BEST ROBLOX SUPPLIER IN THE WORLD! HAHAHA", "All")  
+            game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("SIRMADRI - MAKING YOUR EXPERIENCE BETTER! - CHEAP ACCOUNTS IN GGMAX/SIRMADRI_", "All")  
         end
     end
 end
@@ -95,7 +115,7 @@ local function spamadd()
     if not addall then return end
     if addall then
         while true do
-            wait(0.01)
+            wait(0.5)
             for _, player in pairs(game.Players:GetPlayers()) do
                 if player ~= game.Players.LocalPlayer then
                     game.Players.LocalPlayer:RequestFriendship(player)
@@ -110,7 +130,6 @@ end
 local function removeEquippedFruit()
     if not removefruit then return end
     if removefruit then
-        print("Removendo frutas...")
         local args = {
             "RemoveFruit",
             "Beli"
@@ -207,7 +226,10 @@ local function start()
         task.spawn(removeEquippedFruit)
     end
     if beliValue and beliValue.Value >= 5000 then
-        moveTo(CFrame.new(-1929.94, 10.5, -11465.59))
+        local closestNPC = getClosestNPC()
+        if closestNPC then
+            moveTo(closestNPC.PrimaryPart.CFrame)
+        end
         while beliValue.Value >= 5000 do
             task.wait(0.5)
             spendmoney()
