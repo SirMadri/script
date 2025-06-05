@@ -1,0 +1,53 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local currentPlaceId = game.PlaceId
+
+-- Lista de jogos para hop
+local gameIds = {
+    2753915549, 142823291, 10449761463, 6516141723,
+    7041939546, 286090429, 1962086868,
+    9391468976, 8737899170, 537413528, 18901165922,
+    13076380114, 606849621, 189707, 123520992554763
+}
+
+local function hopGame()
+    local nextGameId
+    repeat
+        nextGameId = gameIds[math.random(1, #gameIds)]
+    until nextGameId ~= currentPlaceId
+    local success, err = pcall(function()
+        TeleportService:Teleport(nextGameId, LocalPlayer)
+    end)
+    if not success then
+        warn("Erro ao teleportar:", err)
+        task.wait(5)
+        hopGame()
+    end
+end
+
+if currentPlaceId == 3642915759 then
+    local start = tick()
+    while tick() - start < 5 do
+        local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local HRP = Character:FindFirstChild("HumanoidRootPart")
+        if HRP then
+            for _, descendant in pairs(Workspace:GetDescendants()) do
+                if descendant:IsA("BasePart") then
+                    HRP.CFrame = descendant.CFrame + Vector3.new(0, 4, 0)
+                    task.wait()
+                end
+            end
+        end
+        task.wait()
+    end
+    hopGame()
+else
+    task.wait(2)
+    hopGame()
+end
