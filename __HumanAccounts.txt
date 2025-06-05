@@ -2,48 +2,112 @@ if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
+--\_____________________________________/ Serviços \_____________________________________/--
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local currentPlaceId = game.PlaceId
+local CurrentPlaceId = game.PlaceId
 
--- Lista de jogos para hop
-local gameIds = {
+--\_____________________________________/ Server Hop List \_____________________________________/--
+local GameIds = {
     2753915549, 142823291, 10449761463, 6516141723,
     7041939546, 286090429, 1962086868,
     9391468976, 8737899170, 537413528, 18901165922,
     13076380114, 606849621, 189707, 123520992554763
 }
+local badgesPlaceId = 3642915759
 
+--\_____________________________________/ Função Server Hop / GetBadges \_____________________________________/--
+-- Server Hop
 local function hopGame()
+    local attempts = 0
     local nextGameId
     repeat
-        nextGameId = gameIds[math.random(1, #gameIds)]
-    until nextGameId ~= currentPlaceId
-    local success, err = pcall(function()
+        nextGameId = GameIds[math.random(1, #GameIds)]
+        attempts = attempts + 1
+    until nextGameId ~= CurrentPlaceId or attempts > 10
+
+    local success, result = pcall(function()
         TeleportService:Teleport(nextGameId, LocalPlayer)
     end)
+
     if not success then
-        warn("Erro ao teleportar:", err)
+        warn("Teleport Error:", result)
         task.wait(5)
         hopGame()
     end
 end
 
-if currentPlaceId == 3642915759 then
-    local start = tick()
-    while tick() - start < 5 do
-        local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local HRP = Character:FindFirstChild("HumanoidRootPart")
-        if HRP then
-            for _, descendant in pairs(Workspace:GetDescendants()) do
-                if descendant:IsA("BasePart") then
-                    HRP.CFrame = descendant.CFrame + Vector3.new(0, 4, 0)
-                    task.wait()
-                end
-            end
+-- Função GetBadges
+local function scanAndMoveCharacter()
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = character:WaitForChild("HumanoidRootPart", 5)
+    if not hrp then return end
+
+    for _, part in Workspace:GetDescendants() do
+        if part:IsA("BasePart") then
+            hrp.CFrame = part.CFrame + Vector3.new(0, 4, 0)
+            task.wait()
         end
+    end
+end
+
+--\_____________________________________/ FPS Boost \_____________________________________/--
+local function applyFPSBoost()
+    if CurrentPlaceId == badgesPlaceId then return end
+    local Terrain = workspace:FindFirstChildOfClass("Terrain")
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Low
+    settings().Rendering.EagerBulkExecution = false
+    pcall(function()
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 1e10
+        Lighting.Brightness = 0
+        Lighting.EnvironmentDiffuseScale = 0
+        Lighting.EnvironmentSpecularScale = 0
+        Lighting.ClockTime = 12
+    end)
+    for _, obj in ipairs(game:GetDescendants()) do
+        if obj:IsA("Decal") or obj:IsA("Texture") then
+            obj.Transparency = 1
+        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") then
+            obj.Enabled = false
+        elseif obj:IsA("Explosion") then
+            obj.Visible = false
+        elseif obj:IsA("Beam") then
+            obj.Enabled = false
+        elseif obj:IsA("BasePart") then
+            obj.CastShadow = false
+            obj.Material = Enum.Material.Plastic
+            obj.Reflectance = 0
+        end
+    end
+    if Terrain then
+        Terrain.WaterWaveSize = 0
+        Terrain.WaterWaveSpeed = 0
+        Terrain.WaterReflectance = 0
+        Terrain.WaterTransparency = 0
+    end
+    pcall(function()
+        workspace.CurrentCamera:ClearAllChildren()
+    end)
+    if sethiddenproperty then
+        pcall(function()
+            sethiddenproperty(LocalPlayer, "SimulationRadius", 0)
+        end)
+    end
+    RunService:Set3dRenderingEnabled(false)
+end
+
+--\_____________________________________/ Loading \_____________________________________/--
+task.spawn(applyFPSBoost)
+if CurrentPlaceId == badgesPlaceId then
+    local startTime = tick()
+    while tick() - startTime < 5 do
+        pcall(scanAndMoveCharacter)
         task.wait()
     end
     hopGame()
