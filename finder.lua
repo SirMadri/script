@@ -1,5 +1,6 @@
-getgenv().url = "http://localhost:8080/add"
+getgenv().url = "http://localhost:8081/add" -- endpoint para enviar secrets
 getgenv().x_token = "supersecreto123"
+getgenv().get_job_url = "http://localhost:8081/get-job" -- endpoint para pegar job_id para hop
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -9,6 +10,8 @@ local TPS = game:GetService("TeleportService")
 local Player = Players.LocalPlayer
 
 repeat task.wait() until game:IsLoaded()
+
+-- FPS boost / invisibilidade
 local Lighting = game:GetService('Lighting')
 settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
 Lighting.Brightness = 0
@@ -17,6 +20,7 @@ Lighting.Ambient = Color3.new(0,0,0)
 Lighting.OutdoorAmbient = Color3.new(0,0,0)
 Lighting.FogEnd = 1
 Lighting.FogStart = 0
+
 local function makeInvisible(object)
     pcall(function()
         if object:IsA('BasePart') then object.Transparency = 1 object.CastShadow = false
@@ -24,11 +28,13 @@ local function makeInvisible(object)
         elseif object:IsA('ParticleEmitter') or object:IsA('Trail') or object:IsA('Beam') then object.Enabled = false end
     end)
 end
+
 for _, v in next, workspace:GetDescendants() do makeInvisible(v) end
 workspace.DescendantAdded:Connect(makeInvisible)
 for _, v in next, workspace:GetDescendants() do pcall(function() if v:IsA("Sound") then v.Playing = false end end) end
 workspace.DescendantAdded:Connect(function(v) pcall(function() if v:IsA("Sound") then v.Playing = false end end) end)
 
+-- Conversor abreviação
 local function conversor(valor)
     if not valor then return 0 end
     local mult = 1
@@ -39,6 +45,7 @@ local function conversor(valor)
     return tonumber(number) and tonumber(number) * mult or 0
 end
 
+-- Envia Secret
 local function sendSecret(name, generation, job_id)
     local payload = {
         name = name,
@@ -64,17 +71,27 @@ local function sendSecret(name, generation, job_id)
     end
 end
 
+-- Server hop usando job_id do seu novo endpoint
 local function serverHop()
-    local Api = "https://games.roblox.com/v1/games/"
-    local _servers = Api..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=10"
-    local raw = game:HttpGet(_servers)
-    local data = HttpService:JSONDecode(raw)
-    if data and data.data and #data.data > 0 then
-        local Server = data.data[math.random(1, #data.data)]
-        TPS:TeleportToPlaceInstance(game.PlaceId, Server.id, Player)
+    local requestFunc = http_request or request or (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request)
+    if not requestFunc then return end
+
+    local ok, res = pcall(function()
+        return requestFunc({
+            Url = getgenv().get_job_url,
+            Method = "GET"
+        })
+    end)
+
+    if ok and res and res.Body then
+        local data = HttpService:JSONDecode(res.Body)
+        if data and data.job_id then
+            TPS:TeleportToPlaceInstance(game.PlaceId, data.job_id, Player)
+        end
     end
 end
 
+-- Checagem de plots e envio de Secrets
 local function checker()
     local playersnum = #Players:GetPlayers()
     if playersnum >= 8 then return end
@@ -94,7 +111,7 @@ local function checker()
                     local gen = overhead:FindFirstChild("Generation")
                     local rarity = overhead:FindFirstChild("Rarity")
                     local valorcorreto = gen and conversor(gen.Text) or 0
-                    if rarity == "Secret" and valorcorreto >= 1_000_000 then
+                    if rarity and rarity.Text == "Secret" and valorcorreto >= 1_000_000 then
                         sendSecret(
                             nome and nome.Text or "Unknown",
                             gen and gen.Text or "0",
@@ -113,10 +130,9 @@ local function checker()
     end
 end
 
+-- Loop principal
 task.spawn(function()
     while task.wait(5) do
         checker()
-        task.wait(1)
-        serverHop()
     end
 end)
