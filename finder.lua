@@ -83,9 +83,17 @@ local function serverHop()
         })
     end)
 
+    print("GET /get-job ok:", ok)
+    if res then
+        print("Res:", res)
+        print("Res.Body:", res.Body)
+    end
+
     if ok and res and res.Body then
         local data = HttpService:JSONDecode(res.Body)
+        print("Data decoded:", data)
         if data and data.job_id then
+            print("Fazendo teleport para job_id:", data.job_id)
             TPS:TeleportToPlaceInstance(game.PlaceId, data.job_id, Player)
         end
     end
