@@ -1,6 +1,6 @@
-getgenv().url = "http://localhost:8080/add" -- endpoint para enviar secrets
+getgenv().url = "http://localhost:8080/add"
 getgenv().x_token = "supersecreto123"
-getgenv().get_job_url = "http://localhost:8080/get-job" -- endpoint para pegar job_id para hop
+getgenv().get_job_url = "http://localhost:8080/get-job"
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -11,7 +11,6 @@ local Player = Players.LocalPlayer
 
 repeat task.wait() until game:IsLoaded()
 
--- FPS boost / invisibilidade
 local Lighting = game:GetService('Lighting')
 settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
 Lighting.Brightness = 0
@@ -34,7 +33,6 @@ workspace.DescendantAdded:Connect(makeInvisible)
 for _, v in next, workspace:GetDescendants() do pcall(function() if v:IsA("Sound") then v.Playing = false end end) end
 workspace.DescendantAdded:Connect(function(v) pcall(function() if v:IsA("Sound") then v.Playing = false end end) end)
 
--- Conversor abreviação
 local function conversor(valor)
     if not valor then return 0 end
     local mult = 1
@@ -45,7 +43,6 @@ local function conversor(valor)
     return tonumber(number) and tonumber(number) * mult or 0
 end
 
--- Envia Secret
 local function sendSecret(name, generation, job_id)
     local payload = {
         name = name,
@@ -71,7 +68,6 @@ local function sendSecret(name, generation, job_id)
     end
 end
 
--- Server hop usando job_id do seu novo endpoint
 local function serverHop()
     local requestFunc = http_request or request or (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request)
     if not requestFunc then return end
@@ -79,27 +75,27 @@ local function serverHop()
     local ok, res = pcall(function()
         return requestFunc({
             Url = getgenv().get_job_url,
-            Method = "GET"
+            Method = "GET",
+            Headers = { ["Content-Type"] = "application/json" }
         })
     end)
 
-    print("GET /get-job ok:", ok)
-    if res then
-        print("Res:", res)
-        print("Res.Body:", res.Body)
-    end
+    if not ok or not res then return end
 
-    if ok and res and res.Body then
-        local data = HttpService:JSONDecode(res.Body)
-        print("Data decoded:", data)
-        if data and data.job_id then
-            print("Fazendo teleport para job_id:", data.job_id)
-            TPS:TeleportToPlaceInstance(game.PlaceId, data.job_id, Player)
-        end
+    local body = res.Body or res.BodyEncoded or res[1]
+    if not body then return end
+
+    local data
+    local success, err = pcall(function()
+        data = HttpService:JSONDecode(body)
+    end)
+    if not success or not data then return end
+
+    if data.job_id then
+        TPS:TeleportToPlaceInstance(game.PlaceId, data.job_id, Player)
     end
 end
 
--- Checagem de plots e envio de Secrets
 local function checker()
     local playersnum = #Players:GetPlayers()
     if playersnum >= 8 then return end
@@ -131,16 +127,12 @@ local function checker()
             end
         end
     end
-
-    if totalFound == 0 then
-        print("Nenhum animal encontrado, fazendo hop...")
-        serverHop()
-    end
 end
 
--- Loop principal
 task.spawn(function()
     while task.wait(5) do
         checker()
+        task.wait(1)
+        serverHop()
     end
 end)
