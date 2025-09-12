@@ -1,4 +1,4 @@
-getgenv().url = "http://localhost:8081/add" -- endpoint para enviar secrets
+getgenv().url = "http://localhost:8080/add" -- endpoint para enviar secrets
 getgenv().x_token = "supersecreto123"
 getgenv().get_job_url = "http://localhost:8081/get-job" -- endpoint para pegar job_id para hop
 
