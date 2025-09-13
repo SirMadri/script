@@ -57,11 +57,11 @@ local function sendSecret(name, generation, job_id)
     if requestFunc then
         pcall(function()
             requestFunc({
-                Url = getgenv().url,
+                Url = url,
                 Method = "POST",
                 Headers = {
                     ["Content-Type"] = "application/json",
-                    ["x-token"] = getgenv().x_token
+                    ["x-token"] = x_token
                 },
                 Body = encoded
             })
@@ -75,16 +75,22 @@ local function serverHop()
 
     local ok, res = pcall(function()
         return requestFunc({
-            Url = getgenv().get_job_url,
+            Url = get_job_url,
             Method = "GET",
             Headers = { ["Content-Type"] = "application/json" }
         })
     end)
 
-    if not ok or not res then return end
+    if not ok or not res then
+        warn("Erro na requisição!")
+        return
+    end
 
     local body = res.Body or res.BodyEncoded or res[1]
-    if not body then return end
+    if not body then
+        warn("Resposta vazia!")
+        return
+    end
 
     local data
     local success, err = pcall(function()
