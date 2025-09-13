@@ -1,6 +1,6 @@
-getgenv().url = "http://localhost:8080/add"
+getgenv().url = "https://hdtv-break-attacked-struck.trycloudflare.com/add"
 getgenv().x_token = "supersecreto123"
-getgenv().get_job_url = "http://localhost:8080/get-job"
+getgenv().get_job_url = "https://hdtv-break-attacked-struck.trycloudflare.com/get-job"
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
