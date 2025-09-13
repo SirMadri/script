@@ -1,6 +1,9 @@
-getgenv().url = "http://45.82.245.40:8000/add"
-getgenv().x_token = "supersecreto123"
-getgenv().get_job_url = "http://45.82.245.40:8000/get-job"
+local url = "http://45.82.245.40:8000/add"
+local x_token = "supersecreto123"
+local get_job_url = "http://45.82.245.40:8000/get-job"
+
+print(url)
+print(get_job_url)
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
