@@ -116,7 +116,8 @@ local function checker()
                     local gen = overhead:FindFirstChild("Generation")
                     local rarity = overhead:FindFirstChild("Rarity")
                     local valorcorreto = gen and conversor(gen.Text) or 0
-                    if rarity and rarity.Text == "Secret" or rarity.Text == "OG" and valorcorreto >= 1_000_000 then
+                    if nome == "Crafting" or nome == "Fusing" then continue end
+                    if rarity and ( (rarity.Text == "Secret" or rarity.Text == "OG") and valorcorreto >= 1_000_000 ) then
                         sendSecret(
                             nome and nome.Text or "Unknown",
                             gen and gen.Text or "0",
