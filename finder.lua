@@ -47,7 +47,8 @@ local function sendSecret(name, generation, job_id)
     local payload = {
         name = name,
         generation = generation,
-        job_id = job_id
+        job_id = job_id,
+        players = tostring(#Players:GetPlayers()) .. "/8"
     }
 
     local encoded = HttpService:JSONEncode(payload)
