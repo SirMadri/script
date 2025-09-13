@@ -1,6 +1,6 @@
-getgenv().url = "https://hdtv-break-attacked-struck.trycloudflare.com/add"
+getgenv().url = "http://45.82.245.40:8000/add"
 getgenv().x_token = "supersecreto123"
-getgenv().get_job_url = "https://hdtv-break-attacked-struck.trycloudflare.com/get-job"
+getgenv().get_job_url = "http://45.82.245.40:8000/get-job"
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -111,19 +111,22 @@ local function checker()
                 local spawn = base and base:FindFirstChild("Spawn")
                 local attach = spawn and spawn:FindFirstChild("Attachment")
                 local overhead = attach and attach:FindFirstChild("AnimalOverhead")
+
                 if overhead then
                     local nome = overhead:FindFirstChild("DisplayName")
                     local gen = overhead:FindFirstChild("Generation")
                     local rarity = overhead:FindFirstChild("Rarity")
                     local valorcorreto = gen and conversor(gen.Text) or 0
-                    if nome == "Crafting" or nome == "Fusing" then continue end
-                    if rarity and ( (rarity.Text == "Secret" or rarity.Text == "OG") and valorcorreto >= 1_000_000 ) then
-                        sendSecret(
-                            nome and nome.Text or "Unknown",
-                            gen and gen.Text or "0",
-                            game.JobId
-                        )
-                        totalFound += 1
+
+                    if nome and not string.find(nome.Text:lower(), "craft") and not string.find(nome.Text:lower(), "fusing") then
+                        if rarity and ((rarity.Text == "Secret" or rarity.Text == "OG") and valorcorreto >= 1_000_000) then
+                            sendSecret(
+                                nome.Text,
+                                gen and gen.Text or "0",
+                                game.JobId
+                            )
+                            totalFound += 1
+                        end
                     end
                 end
             end
