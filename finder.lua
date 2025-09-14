@@ -44,11 +44,13 @@ local function conversor(valor)
 end
 
 local function sendSecret(name, generation, job_id)
+    local timer = os.date("%d/%m/%Y %H:%M:%S")
     local payload = {
         name = name,
         generation = generation,
         job_id = job_id,
-        players = tostring(#Players:GetPlayers()) .. "/8"
+        players = tostring(#Players:GetPlayers()) .. "/8",
+        timer = timer
     }
 
     local encoded = HttpService:JSONEncode(payload)
