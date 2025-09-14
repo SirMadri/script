@@ -46,11 +46,11 @@ end
 local function sendSecret(name, generation, job_id)
     local timer = os.date("%d/%m/%Y %H:%M:%S")
     local payload = {
-        name = name,
-        generation = generation,
-        job_id = job_id,
+        name = tostring(name or "unknown"),
+        generation = tostring(generation or "0"),
+        job_id = tostring(job_id or ""),
         players = tostring(#Players:GetPlayers()) .. "/8",
-        timer = timer
+        timer = tostring(timer)
     }
 
     local encoded = HttpService:JSONEncode(payload)
