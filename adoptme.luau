@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local webhookUrl = getgenv().webhookCONFIG
+local vps = getgenv().VPSCONFIG
 local alreadySent = false
 
 task.spawn(function()
@@ -14,15 +15,15 @@ task.spawn(function()
 
 		local progress = app:FindFirstChild("ProgressText")
 		if not progress or not progress:IsA("TextLabel") then
-			print("[INFO] A GUI de progresso ainda não existe.")
+			print("[INFO][" .. vps .. "] A GUI de progresso ainda não existe.")
 			continue
-        end
+		end
 
 		local text = progress.Text
-		print("[Progress] Taming: " .. text)
+		print("[Progress][" .. vps .. "] Taming: " .. text)
 
 		if text == "100%" and not alreadySent then
-			alreadySent = true 
+			alreadySent = true
 
 			local data = {
 				content = "",
@@ -30,15 +31,13 @@ task.spawn(function()
 				embeds = {{
 					id = 356043464,
 					title = "Um pet Kitty Bat foi obtido no evento de Halloween! 🎃",
-					description = "Usuário: **" .. player.Name .. "**",
+					description = "Usuário: **" .. player.Name .. "**\nVPS: **" .. vps .. "**",
 					color = 0xFF7518,
-					fields = {
-						{
-							name = "⏰ Horário Local",
-							value = os.date("%d/%m/%Y %H:%M:%S"),
-							inline = true
-						}
-					},
+					fields = {{
+						name = "⏰ Horário Local",
+						value = os.date("%d/%m/%Y %H:%M:%S"),
+						inline = true
+					}},
 					timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
 				}},
 				username = "Kitty Bat",
@@ -54,13 +53,14 @@ task.spawn(function()
 			end)
 
 			if success then
-				print("[Webhook] 🎃 Enviado com sucesso para o Discord!")
+				print("[Webhook][" .. vps .. "] 🎃 Enviado com sucesso para o Discord!")
 			else
-				warn("[Webhook] Erro ao enviar:", err)
+				warn("[Webhook][" .. vps .. "] Erro ao enviar:", err)
 			end
+
 		elseif text ~= "100%" and alreadySent then
 			alreadySent = false
-			print("[INFO] Progresso resetado, aguardando novo pet...")
+			print("[INFO][" .. vps .. "] Progresso resetado, aguardando novo pet...")
 		end
 	end
 end)
